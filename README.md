@@ -95,9 +95,9 @@ Hence, all Jets, E/Gammas and Taus are available in the `L1ScoutingDataset`.
 ```
 # create a project area
 # Any pre-release of (14_1_X) >14_1_0_pre1 can be used, or >14_0_5 for the 14_0_X release cycle
-cmsrel CMSSW_14_1_0_pre1 
+cmsrel CMSSW_14_1_0_pre6 
 
-cd CMSSW_14_1_0_pre1/src
+cd CMSSW_14_1_0_pre6/src
 cmsenv
 
 mkdir Demo
