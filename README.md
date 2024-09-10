@@ -121,8 +121,7 @@ cmsRun python/demo_cfg.py inFile=root://cms-xrd-global.cern.ch//store/data/Run20
 
 # ntuplize BX selected by the Dijet30Barrel selection for 10 orbits 
 # (from the L1ScoutingSelection dataset)
-cmsRun python/ntuplizer_cfg.py inFile=inFile=root://cms-xrd-global.cern.ch//store/data/Run2024D/L1ScoutingSelection/L1SCOUT/v1/000/380/346/00000/7c9d
-89df-449a-47a7-9ce7-958b55185c82.root outFile=ntuple_dijet.root numOrbits=10 onlineSelection=Dijet30Barrel
+cmsRun python/ntuplizer_cfg.py inFile=root://cms-xrd-global.cern.ch//store/data/Run2024D/L1ScoutingSelection/L1SCOUT/v1/000/380/346/00000/7c9d89df-449a-47a7-9ce7-958b55185c82.root outFile=ntuple_dijet.root numOrbits=10 onlineSelection=Dijet30Barrel
 
 # ntuplize all BX for a prescaled fraction of orbits (10)
 # (from the L1Scouting dataset)
