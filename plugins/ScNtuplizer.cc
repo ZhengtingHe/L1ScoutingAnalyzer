@@ -60,7 +60,8 @@ private:
     const edm::Handle<MuonOrbitCollection>& muonsCollection,
     const edm::Handle<JetOrbitCollection>& jetsCollection,
     const edm::Handle<EGammaOrbitCollection>& eGammasCollection,
-    const edm::Handle<BxSumsOrbitCollection>& bxSumsCollection
+    const edm::Handle<BxSumsOrbitCollection>& bxSumsCollection,
+    const edm::Handle<TauOrbitCollection>& tausCollection
   );
 
   // store filled bx in a vector
@@ -69,6 +70,7 @@ private:
     const edm::Handle<JetOrbitCollection>& jetsCollection,
     const edm::Handle<EGammaOrbitCollection>& eGammasCollection,
     const edm::Handle<BxSumsOrbitCollection>& bxSumsCollection,
+    const edm::Handle<TauOrbitCollection>& tausCollection,
     std::vector<unsigned>& filledBxVec
   );
 
@@ -79,6 +81,7 @@ private:
   edm::EDGetTokenT<OrbitCollection<l1ScoutingRun3::Jet>> jetsTokenData_;
   edm::EDGetTokenT<OrbitCollection<l1ScoutingRun3::EGamma>> eGammasTokenData_;
   edm::EDGetTokenT<OrbitCollection<l1ScoutingRun3::BxSums>> bxSumsTokenData_;
+  edm::EDGetTokenT<OrbitCollection<l1ScoutingRun3::Tau>> tausTokenData_;
   
   edm::EDGetTokenT<std::vector<unsigned>> selectedBxToken_;
 
@@ -110,6 +113,9 @@ private:
   std::vector<float> muonPtu_, muonPhi_, muonEta_;
   std::vector<int> tfIndex_, dxy_, charge_, qual_;
   int nMuons_;
+  //taus
+  std::vector<float> tauEt_, tauPhi_, tauEta_;
+  int nTaus_;
 };
 
 ScNtuplizer::ScNtuplizer(const edm::ParameterSet& iPSet){
@@ -118,6 +124,7 @@ ScNtuplizer::ScNtuplizer(const edm::ParameterSet& iPSet){
   m_inputTags["jetsTag_"] = iPSet.getParameter<edm::InputTag>("jetsTag");
   m_inputTags["eGammasTag_"] = iPSet.getParameter<edm::InputTag>("eGammasTag");
   m_inputTags["bxSumsTag_"] = iPSet.getParameter<edm::InputTag>("bxSumsTag");
+  m_inputTags["tausTag_"] = iPSet.getParameter<edm::InputTag>("tausTag");
   
   onlineSelection_ = iPSet.getUntrackedParameter<bool>("onlineSelection", false);
 
@@ -132,7 +139,8 @@ ScNtuplizer::ScNtuplizer(const edm::ParameterSet& iPSet){
   jetsTokenData_ = consumes<OrbitCollection<l1ScoutingRun3::Jet>>(m_inputTags["jetsTag_"]);
   eGammasTokenData_ = consumes<OrbitCollection<l1ScoutingRun3::EGamma>>(m_inputTags["eGammasTag_"]);
   bxSumsTokenData_ = consumes<OrbitCollection<l1ScoutingRun3::BxSums>>(m_inputTags["bxSumsTag_"]);
-  
+  tausTokenData_ = consumes<OrbitCollection<l1ScoutingRun3::Tau>>(m_inputTags["tausTag_"]);
+
   // create TTree
   eventsTree_ = fs->make<TTree>("Events", "Events");
 
@@ -162,7 +170,7 @@ ScNtuplizer::ScNtuplizer(const edm::ParameterSet& iPSet){
   eventsTree_->Branch("towerCounts", &towerCount_);
 
   // muons
-  eventsTree_->Branch("nMuons", &nMuons_);
+  eventsTree_->Branch("nofMuons", &nMuons_);
   eventsTree_->Branch("muonPt", &muonPt_);
   eventsTree_->Branch("muonPhi", &muonPhi_ );
   eventsTree_->Branch("muonEta", &muonEta_);
@@ -174,6 +182,12 @@ ScNtuplizer::ScNtuplizer(const edm::ParameterSet& iPSet){
   eventsTree_->Branch("muonDxy", &dxy_);
   eventsTree_->Branch("muonPtu", &muonPtu_);
 
+  // taus
+  eventsTree_->Branch("nTaus", &nTaus_);
+  eventsTree_->Branch("tauEt", &tauEt_);
+  eventsTree_->Branch("tauPhi", &tauPhi_ );
+  eventsTree_->Branch("tauEta", &tauEta_);
+
   resetTreeBranches();
 }
 
@@ -182,13 +196,15 @@ void ScNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
   edm::Handle<OrbitCollection<l1ScoutingRun3::Jet>> jetsCollection; 
   edm::Handle<OrbitCollection<l1ScoutingRun3::EGamma>> eGammasCollection; 
   edm::Handle<OrbitCollection<l1ScoutingRun3::BxSums>> bxSumsCollection;
+  edm::Handle<OrbitCollection<l1ScoutingRun3::Tau>> tausCollection;
 
   
   iEvent.getByToken(muonsTokenData_, muonsCollection); 
   iEvent.getByToken(jetsTokenData_, jetsCollection); 
   iEvent.getByToken(eGammasTokenData_, eGammasCollection); 
   iEvent.getByToken(bxSumsTokenData_, bxSumsCollection); 
-  
+  iEvent.getByToken(tausTokenData_, tausCollection); 
+
   std::vector<unsigned> bxList;
   if (onlineSelection_){
     edm::Handle<std::vector<unsigned>> selectedBx;
@@ -202,6 +218,7 @@ void ScNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
       jetsCollection,
       eGammasCollection,
       bxSumsCollection,
+      tausCollection,
       bxList
     );
   }
@@ -215,7 +232,8 @@ void ScNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
         muonsCollection,
         jetsCollection,
         eGammasCollection,
-        bxSumsCollection
+        bxSumsCollection,
+        tausCollection
       );
   } // end orbit loop
 } 
@@ -225,7 +243,8 @@ void ScNtuplizer::processDataBx(
     const edm::Handle<MuonOrbitCollection>& muonsCollection,
     const edm::Handle<JetOrbitCollection>& jetsCollection,
     const edm::Handle<EGammaOrbitCollection>& eGammasCollection,
-    const edm::Handle<BxSumsOrbitCollection>& bxSumsCollection
+    const edm::Handle<BxSumsOrbitCollection>& bxSumsCollection,
+    const edm::Handle<TauOrbitCollection>& tausCollection
   ) {
 
     resetTreeBranches();
@@ -238,6 +257,7 @@ void ScNtuplizer::processDataBx(
     const auto& eGammas = eGammasCollection->bxIterator(bx);
     const auto& bxSums = bxSumsCollection->bxIterator(bx); // [0] only one valid sum.
     const auto& muons = muonsCollection->bxIterator(bx);
+    const auto& taus = tausCollection->bxIterator(bx);
     
     // fill muon branches
     for (const auto& muon : muons) {
@@ -278,6 +298,17 @@ void ScNtuplizer::processDataBx(
       egIso_.push_back(l1eg.hwIso());
 
       nEGammas_++;
+    }
+
+    // fill tau branches
+    for (const auto& tau : taus) {
+      l1t::Tau l1tau = getL1TTau(tau);
+
+      tauEt_.push_back(l1tau.et());
+      tauPhi_.push_back(l1tau.phi());
+      tauEta_.push_back(l1tau.eta());
+
+      nTaus_++;
     }
     
     // get subset of energy sums (if present, stored only if there is at least a calo object)
@@ -343,6 +374,12 @@ void ScNtuplizer::resetTreeBranches() {
   qual_.clear();
   dxy_.clear();
   muonPtu_.clear();
+
+  // taus
+  nTaus_=0;
+  tauEt_.clear();
+  tauPhi_.clear();
+  tauEta_.clear();
 }
 
 void ScNtuplizer::getFilledBx(
@@ -350,6 +387,7 @@ void ScNtuplizer::getFilledBx(
     const edm::Handle<JetOrbitCollection>& jetsCollection,
     const edm::Handle<EGammaOrbitCollection>& eGammasCollection,
     const edm::Handle<BxSumsOrbitCollection>& bxSumsCollection,
+    const edm::Handle<TauOrbitCollection>& tausCollection,
     std::vector<unsigned>& filledBxVec
   ) {
     // get filled bunch crossings for each collection
@@ -364,6 +402,10 @@ void ScNtuplizer::getFilledBx(
     }
 
     for (const unsigned& bx : muonsCollection->getFilledBxs()) {
+      filledBx.insert(bx);
+    }
+
+    for (const unsigned& bx : tausCollection->getFilledBxs()) {
       filledBx.insert(bx);
     }
 

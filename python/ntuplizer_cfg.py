@@ -70,7 +70,8 @@ else:
         jetsTag       = cms.InputTag("l1ScCaloUnpacker",  "Jet"),
         eGammasTag    = cms.InputTag("l1ScCaloUnpacker",  "EGamma"),
         bxSumsTag     = cms.InputTag("l1ScCaloUnpacker",  "EtSum"),
-        onlineSelection = cms.untracked.bool(False)
+        tausTag       = cms.InputTag("l1ScCaloUnpacker",  "Tau"),
+        onlineSelection = cms.untracked.bool(False),
     )
 
 process.p = cms.Path(
